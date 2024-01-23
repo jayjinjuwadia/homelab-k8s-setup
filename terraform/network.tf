@@ -1,9 +1,9 @@
 resource "libvirt_network" "bridge" {
-    name = "bridge-network"
+    name = var.network_name
     mode = "bridge"
-    bridge = "eno1"
+    bridge = var.bridge_name
     autostart = true
-    addresses = ["192.168.0.84/24"]
+    addresses = var.bridge_cidr
     dns {
         enabled = true
     }
