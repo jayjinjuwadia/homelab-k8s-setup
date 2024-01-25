@@ -4,7 +4,7 @@ resource "libvirt_network" "bridge" {
     bridge = var.bridge_name
     autostart = true
     addresses = var.bridge_cidr
-    dns {
+    dhcp {
         enabled = true
     }
 }
