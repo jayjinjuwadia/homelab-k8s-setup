@@ -3,8 +3,5 @@ resource "libvirt_network" "bridge" {
     mode = "bridge"
     bridge = var.bridge_name
     autostart = true
-    addresses = var.bridge_cidr
-    dhcp {
-        enabled = true
-    }
+    addresses = [var.bridge_cidr]
 }

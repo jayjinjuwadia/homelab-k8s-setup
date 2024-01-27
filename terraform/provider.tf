@@ -9,7 +9,7 @@ terraform {
 
 # - make sure user is in libvirtd and qemu group
 # - make sure allow tcp forwarding is on in sshd_config
-# - make sure libvirtd.socket and libvirtd-ro.socket specify SocketMode and SocketGroup so group members can access socket
+# - make sure libvirtd.socket and libvirtd-ro.socket specify SocketMode and SocketGroup as 660 and qemu so group members can access socket
 #   if libvirtd is managed by systemd, otherwise edit /etc/libvirt/libvirtd.conf
 # https://ostechnix.com/solved-cannot-access-storage-file-permission-denied-error-in-kvm-libvirt/
 provider "libvirt" {

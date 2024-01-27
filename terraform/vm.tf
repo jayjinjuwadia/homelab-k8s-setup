@@ -6,15 +6,20 @@ resource "libvirt_domain" "master" {
     volume_id = libvirt_volume.master.id
     scsi      = "true"
   }
-  autostart = true
+  autostart = false
     network_interface {
         network_id = libvirt_network.bridge.id
         hostname = "master"
-        wait_for_lease = true
-        addresses = ["192.168.122.10"]
+        addresses = ["192.168.0.250"]
     }
     graphics {
       type = "vnc"
     }
+    console {
+    type        = "pty"
+    target_port = "0"
+    target_type = "serial"
+    source_path = "/dev/pts/4"
+  }
 }
 #security driver none

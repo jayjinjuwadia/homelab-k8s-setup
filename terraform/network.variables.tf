@@ -9,6 +9,17 @@ variable "bridge_name" {
 }
 
 variable "bridge_cidr" {
-    type = list(string)
-    description = "List of bridge cidrs"
+    type = string
+    description = "bridge cidr"
+}
+
+variable "gateway" {
+  type = string
+  description = "Ip address of the gateway"
+  default = "192.168.0.1"
+} 
+
+variable "network_cidr" {
+  type = string
+  description = "Network cidr range"
 }
