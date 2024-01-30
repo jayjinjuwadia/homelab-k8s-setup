@@ -1,0 +1,74 @@
+---
+- name: Setup Kubernetes Master Node
+  become: true
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+
+    - name: Create a directory if it does not exist
+      ansible.builtin.file:
+        path: /kube-deps
+        state: directory
+        mode: '0755'
+
+    - name: Download ContainerD
+      ansible.builtin.get_url_module:
+        url: https://github.com/containerd/containerd/releases/download/v1.7.12/containerd-1.7.12-linux-amd64.tar.gz
+        checksum: "sha256:https://github.com/containerd/containerd/releases/download/v1.7.12/containerd-1.7.12-linux-amd64.tar.gz.sha256sum"
+        dest: /kube-deps/containerd-1.7.12-linux-amd64.tar.gz
+    
+    - name: Extract ContainerD
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: /kube-deps/containerd-1.7.12-linux-amd64.tar.gz
+        dest: /usr/local
+
+    - name: Create systemd unit
+      ansible.builtin.get_url_module:
+        url: https://raw.githubusercontent.com/containerd/containerd/v1.7.12/containerd.service
+        dest: /usr/local/lib/systemd/system/containerd.service
+    
+    - name: Systemd reload
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+    
+    - name: Systemd start ContainerD
+      ansible.builtin.systemd_service:
+        name: containerd
+        enabled: true
+        state: start
+    
+    - name: Download RunC
+      ansible.builtin.get_url_module:
+        url: https://github.com/opencontainers/runc/releases/download/v1.1.11/runc.amd64
+        checksum: "sha256:https://github.com/opencontainers/runc/releases/download/v1.1.11/runc.sha256sum"
+        dest: /kube-deps/runc.amd64
+
+    - name: Install RunC
+      ansible.builtin.command: install -m 755 /kube-deps/runc.amd64 /usr/local/sbin/runc
+
+    - name: Update Kube-repo
+      ansible.builtin.command: echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    
+    - name: Download signing key
+      ansible.builtin.command: curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    
+    - name: 
+
+    - name: Install kubeadm, kubelet, and kubectl
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - kubeadm
+        - kubelet
+        - kubectl
+
+    - name: Initialize Kubernetes master
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16
+      args:
+        creates: /etc/kubernetes/admin.conf
+      become_user: root
+
+    - name: Copy Kubernetes admin.conf to user'
