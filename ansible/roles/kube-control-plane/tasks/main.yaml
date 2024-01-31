@@ -1,98 +1,95 @@
 ---
-- name: Setup Kubernetes Master Node
-  become: true
-  tasks:
-    - name: Update apt package cache
-      apt:
-        update_cache: yes
+- name: Update apt package cache
+  apt:
+    update_cache: yes
 
-    - name: Create a directory if it does not exist
-      ansible.builtin.file:
-        path: /kube-deps
-        state: directory
-        mode: '0755'
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /kube-deps
+    state: directory
+    mode: '0755'
 
-    - name: Download ContainerD
-      ansible.builtin.get_url_module:
-        url: https://github.com/containerd/containerd/releases/download/{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz
-        checksum: "sha256:https://github.com/containerd/containerd/releases/download/{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz.sha256sum"
-        dest: /kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
-    
-    - name: Extract ContainerD
-      ansible.builtin.unarchive:
-        remote_src: true
-        src: /kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
-        dest: /usr/local
+- name: Download ContainerD
+  ansible.builtin.get_url_module:
+    url: https://github.com/containerd/containerd/releases/download/{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+    checksum: "sha256:https://github.com/containerd/containerd/releases/download/{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz.sha256sum"
+    dest: /kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
 
-    - name: Create systemd unit
-      ansible.builtin.get_url_module:
-        url: https://raw.githubusercontent.com/containerd/containerd/{{ containerd_version }}/containerd.service
-        dest: /usr/local/lib/systemd/system/containerd.service
-    
-    - name: Systemd reload
-      ansible.builtin.systemd_service:
-        daemon_reload: true
-    
-    - name: Systemd start ContainerD
-      ansible.builtin.systemd_service:
-        name: containerd
-        enabled: true
-        state: start
-    
-    - name: Download RunC
-      ansible.builtin.get_url_module:
-        url: https://github.com/opencontainers/runc/releases/download/{{ runc_version }}/runc.amd64
-        checksum: "sha256:https://github.com/opencontainers/runc/releases/download/{{ runc_version }}/runc.sha256sum"
-        dest: /kube-deps/runc.amd64
+- name: Extract ContainerD
+  ansible.builtin.unarchive:
+    remote_src: true
+    src: /kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+    dest: /usr/local
 
-    - name: Install RunC
-      ansible.builtin.command: install -m 755 /kube-deps/runc.amd64 /usr/local/sbin/runc
-    
-    - name: Install a list of packages
-      ansible.builtin.apt:
-        pkg:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - gpg
+- name: Create systemd unit
+  ansible.builtin.get_url_module:
+    url: https://raw.githubusercontent.com/containerd/containerd/{{ containerd_version }}/containerd.service
+    dest: /usr/local/lib/systemd/system/containerd.service
 
-    - name: Creates directory
-      ansible.builtin.file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: 755
+- name: Systemd reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true
 
-    - name: Download signing key
-      ansible.builtin.command: curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ kube_minor_release }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+- name: Systemd start ContainerD
+  ansible.builtin.systemd_service:
+    name: containerd
+    enabled: true
+    state: start
 
-    - name: Update Kube-repo
-      ansible.builtin.command: echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kube_minor_release }}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-    
-    - name: Install a list of packages
-      ansible.builtin.apt:
-        pkg:
-        - kubeadm={{ kube_full_release }}
-        - kubelet={{ kube_full_release }}
-    
-    - name: Add cgroup driver for containerd
-      ansible.builtin.command: |
-        cat <<EOF | sudo tee -a /etc/containerd/config.toml
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-        SystemdCgroup = true
-        EOF
-    
-    - name: Uncomment disabled CRI plugins
-      ansible.builtin.command: sed -i 's/^disabled_plugins \=/\#disabled_plugins \=/g' /etc/containerd/config.toml
-    
-    - name: Restart containerd
-      ansible.builtin.systemd_service:
-        name: containerd
-        state: restarted
-        enabled: true
+- name: Download RunC
+  ansible.builtin.get_url_module:
+    url: https://github.com/opencontainers/runc/releases/download/{{ runc_version }}/runc.amd64
+    checksum: "sha256:https://github.com/opencontainers/runc/releases/download/{{ runc_version }}/runc.sha256sum"
+    dest: /kube-deps/runc.amd64
 
-    - name: Initialize Kubernetes master
-      command: kubeadm init --pod-network-cidr={{ overlay_cidr }} --skip-phases=addon/kube-proxy
-      args:
-        creates: /etc/kubernetes/admin.conf
-      become_user: root
+- name: Install RunC
+  ansible.builtin.command: install -m 755 /kube-deps/runc.amd64 /usr/local/sbin/runc
+
+- name: Install a list of packages
+  ansible.builtin.apt:
+    pkg:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gpg
+
+- name: Creates directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: 755
+
+- name: Download signing key
+  ansible.builtin.command: curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ kube_minor_release }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Update Kube-repo
+  ansible.builtin.command: echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kube_minor_release }}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+- name: Install a list of packages
+  ansible.builtin.apt:
+    pkg:
+    - kubeadm={{ kube_full_release }}
+    - kubelet={{ kube_full_release }}
+
+- name: Add cgroup driver for containerd
+  ansible.builtin.command: |
+    cat <<EOF | sudo tee -a /etc/containerd/config.toml
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+    SystemdCgroup = true
+    EOF
+
+- name: Uncomment disabled CRI plugins
+  ansible.builtin.command: sed -i 's/^disabled_plugins \=/\#disabled_plugins \=/g' /etc/containerd/config.toml
+
+- name: Restart containerd
+  ansible.builtin.systemd_service:
+    name: containerd
+    state: restarted
+    enabled: true
+
+- name: Initialize Kubernetes master
+  command: kubeadm init --pod-network-cidr={{ overlay_cidr }} --skip-phases=addon/kube-proxy
+  args:
+    creates: /etc/kubernetes/admin.conf
+  become_user: root
