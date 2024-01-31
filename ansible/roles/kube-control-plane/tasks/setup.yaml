@@ -14,19 +14,19 @@
 
     - name: Download ContainerD
       ansible.builtin.get_url_module:
-        url: https://github.com/containerd/containerd/releases/download/v1.7.12/containerd-1.7.12-linux-amd64.tar.gz
-        checksum: "sha256:https://github.com/containerd/containerd/releases/download/v1.7.12/containerd-1.7.12-linux-amd64.tar.gz.sha256sum"
-        dest: /kube-deps/containerd-1.7.12-linux-amd64.tar.gz
+        url: https://github.com/containerd/containerd/releases/download/{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+        checksum: "sha256:https://github.com/containerd/containerd/releases/download/{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz.sha256sum"
+        dest: /kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
     
     - name: Extract ContainerD
       ansible.builtin.unarchive:
         remote_src: true
-        src: /kube-deps/containerd-1.7.12-linux-amd64.tar.gz
+        src: /kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
         dest: /usr/local
 
     - name: Create systemd unit
       ansible.builtin.get_url_module:
-        url: https://raw.githubusercontent.com/containerd/containerd/v1.7.12/containerd.service
+        url: https://raw.githubusercontent.com/containerd/containerd/{{ containerd_version }}/containerd.service
         dest: /usr/local/lib/systemd/system/containerd.service
     
     - name: Systemd reload
@@ -41,8 +41,8 @@
     
     - name: Download RunC
       ansible.builtin.get_url_module:
-        url: https://github.com/opencontainers/runc/releases/download/v1.1.11/runc.amd64
-        checksum: "sha256:https://github.com/opencontainers/runc/releases/download/v1.1.11/runc.sha256sum"
+        url: https://github.com/opencontainers/runc/releases/download/{{ runc_version }}/runc.amd64
+        checksum: "sha256:https://github.com/opencontainers/runc/releases/download/{{ runc_version }}/runc.sha256sum"
         dest: /kube-deps/runc.amd64
 
     - name: Install RunC
@@ -63,16 +63,16 @@
         mode: 755
 
     - name: Download signing key
-      ansible.builtin.command: curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      ansible.builtin.command: curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ kube_minor_release }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
     - name: Update Kube-repo
-      ansible.builtin.command: echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+      ansible.builtin.command: echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kube_minor_release }}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
     
     - name: Install a list of packages
       ansible.builtin.apt:
         pkg:
-        - kubeadm=1.29.1-1.1
-        - kubelet=1.29.1-1.1
+        - kubeadm={{ kube_full_release }}
+        - kubelet={{ kube_full_release }}
     
     - name: Add cgroup driver for containerd
       ansible.builtin.command: |
@@ -92,9 +92,7 @@
         enabled: true
 
     - name: Initialize Kubernetes master
-      command: kubeadm init --pod-network-cidr=10.244.0.0/16 --skip-phases=addon/kube-proxy
+      command: kubeadm init --pod-network-cidr={{ overlay_cidr }} --skip-phases=addon/kube-proxy
       args:
         creates: /etc/kubernetes/admin.conf
       become_user: root
-
-    - name: Copy Kubernetes admin.conf to user'

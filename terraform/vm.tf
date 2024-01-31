@@ -7,7 +7,7 @@ resource "libvirt_domain" "master" {
     volume_id = libvirt_volume.master.id
     scsi      = "true"
   }
-  autostart = false
+  autostart = true
     network_interface {
         network_id = libvirt_network.bridge.id
         hostname = "master"
@@ -20,6 +20,9 @@ resource "libvirt_domain" "master" {
     target_port = "0"
     target_type = "serial"
     source_path = "/dev/pts/4"
+  }
+  lifecycle {
+    replace_triggered_by = [ libvirt_cloudinit_disk.master_init ]
   }
 }
 #security driver none
