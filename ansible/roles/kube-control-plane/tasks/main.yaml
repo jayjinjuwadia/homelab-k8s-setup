@@ -9,6 +9,12 @@
     state: directory
     mode: '0755'
 
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
 - name: Download ContainerD
   ansible.builtin.get_url:
     url: https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz
@@ -71,6 +77,9 @@
     pkg:
     - kubeadm={{ kube_full_release }}
     - kubelet={{ kube_full_release }}
+
+- name: Dump containerd config
+  ansible.builtin.shell: containerd config default > /etc/containerd/config.toml
 
 - name: Add cgroup driver for containerd
   ansible.builtin.shell: |
