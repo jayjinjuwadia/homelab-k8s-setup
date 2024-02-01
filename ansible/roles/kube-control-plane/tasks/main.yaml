@@ -11,19 +11,19 @@
 
 - name: Download ContainerD
   ansible.builtin.get_url:
-    url: https://github.com/containerd/containerd/releases/download/{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz
-    checksum: "sha256:https://github.com/containerd/containerd/releases/download/{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz.sha256sum"
-    dest: /kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+    url: https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+    checksum: "sha256:https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz.sha256sum"
+    dest: /kube-deps/containerd-v{{ containerd_version }}-linux-amd64.tar.gz
 
 - name: Extract ContainerD
   ansible.builtin.unarchive:
     remote_src: true
-    src: /kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+    src: /kube-deps/containerd-v{{ containerd_version }}-linux-amd64.tar.gz
     dest: /usr/local
 
 - name: Create systemd unit
   ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/containerd/containerd/{{ containerd_version }}/containerd.service
+    url: https://raw.githubusercontent.com/containerd/containerd/v{{ containerd_version }}/containerd.service
     dest: /usr/local/lib/systemd/system/containerd.service
 
 - name: Systemd reload
