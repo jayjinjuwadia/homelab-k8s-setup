@@ -23,7 +23,7 @@
 
 - name: Create systemd unit
   ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/containerd/containerd/{{ containerd_version }}/containerd.service
+    url: https://raw.githubusercontent.com/containerd/containerd/v{{ containerd_version }}/containerd.service
     dest: /usr/local/lib/systemd/system/containerd.service
 
 - name: Systemd reload
