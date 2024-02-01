@@ -34,7 +34,7 @@
   ansible.builtin.systemd:
     name: containerd
     enabled: true
-    state: start
+    state: started
 
 - name: Download RunC
   ansible.builtin.get_url:
