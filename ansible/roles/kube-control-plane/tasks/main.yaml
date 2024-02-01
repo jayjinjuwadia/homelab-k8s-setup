@@ -5,7 +5,7 @@
 
 - name: Create a directory if it does not exist
   ansible.builtin.file:
-    path: /kube-deps
+    path: /home/kube-user/kube-deps
     state: directory
     mode: '0755'
 
@@ -13,17 +13,17 @@
   ansible.builtin.get_url:
     url: https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz
     checksum: "sha256:https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz.sha256sum"
-    dest: /kube-deps/containerd-v{{ containerd_version }}-linux-amd64.tar.gz
+    dest: /home/kube-user/kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
 
 - name: Extract ContainerD
   ansible.builtin.unarchive:
     remote_src: true
-    src: /kube-deps/containerd-v{{ containerd_version }}-linux-amd64.tar.gz
+    src: /home/kube-user/kube-deps/containerd-{{ containerd_version }}-linux-amd64.tar.gz
     dest: /usr/local
 
 - name: Create systemd unit
   ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/containerd/containerd/v{{ containerd_version }}/containerd.service
+    url: https://raw.githubusercontent.com/containerd/containerd/{{ containerd_version }}/containerd.service
     dest: /usr/local/lib/systemd/system/containerd.service
 
 - name: Systemd reload
@@ -40,7 +40,7 @@
   ansible.builtin.get_url:
     url: https://github.com/opencontainers/runc/releases/download/{{ runc_version }}/runc.amd64
     checksum: "sha256:https://github.com/opencontainers/runc/releases/download/{{ runc_version }}/runc.sha256sum"
-    dest: /kube-deps/runc.amd64
+    dest: /home/kube-user/kube-deps/runc.amd64
 
 - name: Install RunC
   ansible.builtin.command: install -m 755 /kube-deps/runc.amd64 /usr/local/sbin/runc
