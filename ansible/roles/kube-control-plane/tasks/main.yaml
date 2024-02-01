@@ -43,7 +43,7 @@
     dest: /home/kube-user/kube-deps/runc.amd64
 
 - name: Install RunC
-  ansible.builtin.command: install -m 755 /kube-deps/runc.amd64 /usr/local/sbin/runc
+  ansible.builtin.command: install -m 755 /home/kube-user/kube-deps/runc.amd64 /usr/local/sbin/runc
 
 - name: Install a list of packages
   ansible.builtin.apt:
