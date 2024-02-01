@@ -27,11 +27,11 @@
     dest: /usr/local/lib/systemd/system/containerd.service
 
 - name: Systemd reload
-  ansible.builtin.systemd_service:
+  ansible.builtin.systemd:
     daemon_reload: true
 
 - name: Systemd start ContainerD
-  ansible.builtin.systemd_service:
+  ansible.builtin.systemd:
     name: containerd
     enabled: true
     state: start
@@ -83,7 +83,7 @@
   ansible.builtin.command: sed -i 's/^disabled_plugins \=/\#disabled_plugins \=/g' /etc/containerd/config.toml
 
 - name: Restart containerd
-  ansible.builtin.systemd_service:
+  ansible.builtin.systemd:
     name: containerd
     state: restarted
     enabled: true

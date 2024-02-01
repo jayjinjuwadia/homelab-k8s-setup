@@ -15,6 +15,7 @@ resource "libvirt_volume" "centos_stream" {
 resource "libvirt_volume" "master" {
   name = "master.qcow2"
   pool = libvirt_pool.pool.name
+  size = 125000000000
   base_volume_id = libvirt_volume.centos_stream.id
   depends_on = [ libvirt_volume.centos_stream ]
 }
