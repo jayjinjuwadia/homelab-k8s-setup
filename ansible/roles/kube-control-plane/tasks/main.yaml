@@ -67,6 +67,7 @@
 
 - name: Install a list of packages
   ansible.builtin.apt:
+    update_cache: yes
     pkg:
     - kubeadm={{ kube_full_release }}
     - kubelet={{ kube_full_release }}
